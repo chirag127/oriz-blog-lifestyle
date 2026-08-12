@@ -1,0 +1,182 @@
+---
+/**
+ * DayArcNav — the signature navigation module for Slow Hours.
+ *
+ * Instead of a conventional "About · Blog · Topics" nav bar, this site
+ * navigates through the arc of a day. Four bands — Mornings, Midday,
+ * Evening, Night — correspond to the four lifestyle content themes:
+ *   Mornings  → rituals, routines, sleep, rhythm  (--v-morning)
+ *   Midday    → focus, attention, deep work       (--v-focus)
+ *   Evening   → space, declutter, minimal living  (--v-space)
+ *   Night     → slow living, reflection, calm     (--v-slow)
+ *
+ * The current band is highlighted from the server-rendered hour and then
+ * refined by a tiny inline script (progressive enhancement — no flash).
+ * No JS = still readable, just without the live highlight.
+ *
+ * Used in the homepage hero as the primary wayfinding element.
+ */
+
+const now = new Date()
+const serverHour = now.getHours()
+
+type Band = 'morning' | 'midday' | 'evening' | 'night'
+function bandFor(h: number): Band {
+  if (h >= 5 && h < 12) return 'morning'
+  if (h >= 12 && h < 17) return 'midday'
+  if (h >= 17 && h < 21) return 'evening'
+  return 'night'
+}
+
+const currentBand = bandFor(serverHour)
+
+const arcs: { id: Band; label: string; subtitle: string; href: string; hours: string }[] = [
+  {
+    id: 'morning',
+    label: 'Mornings',
+    subtitle: 'routines · rituals · rhythm',
+    href: '/categories/mornings/',
+    hours: '05–12',
+  },
+  {
+    id: 'midday',
+    label: 'Focus',
+    subtitle: 'attention · deep work · mind',
+    href: '/categories/focus/',
+    hours: '12–17',
+  },
+  {
+    id: 'evening',
+    label: 'Space',
+    subtitle: 'minimal · declutter · less',
+    href: '/categories/space/',
+    hours: '17–21',
+  },
+  {
+    id: 'night',
+    label: 'Slow',
+    subtitle: 'calm · reflection · living',
+    href: '/categories/slow-living/',
+    hours: '21–05',
+  },
+]
+---
+
+<nav class="day-arc" aria-label="Browse by time of day" data-daynav>
+  {arcs.map((arc) => (
+    <a
+      class="arc-band"
+      href={arc.href}
+      data-band={arc.id}
+      aria-current={arc.id === currentBand ? 'true' : undefined}
+    >
+      <span class="arc-hours mono" aria-hidden="true">{arc.hours}</span>
+      <span class="arc-label">{arc.label}</span>
+      <span class="arc-sub mono">{arc.subtitle}</span>
+    </a>
+  ))}
+</nav>
+
+<script is:inline>
+  ;(() => {
+    const h = new Date().getHours()
+    const band = h >= 5 && h < 12 ? 'morning' : h >= 12 && h < 17 ? 'midday' : h >= 17 && h < 21 ? 'evening' : 'night'
+    const nav = document.querySelector('[data-daynav]')
+    if (!nav) return
+    for (const el of nav.querySelectorAll('[data-band]')) {
+      const isNow = el.getAttribute('data-band') === band
+      el.setAttribute('aria-current', isNow ? 'true' : 'false')
+      el.classList.toggle('is-now', isNow)
+    }
+  })()
+</script>
+
+<style>
+  .day-arc {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin-block: clamp(2rem, 6vw, 3.5rem) 0;
+  }
+
+  .arc-band {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: clamp(0.875rem, 3vw, 1.25rem) clamp(0.75rem, 2.5vw, 1.125rem);
+    background: var(--paper);
+    text-decoration: none;
+    color: var(--ink);
+    transition:
+      background var(--dur-fast, 140ms) ease,
+      color var(--dur-fast, 140ms) ease;
+    border-top: 2px solid transparent;
+  }
+
+  .arc-band:hover {
+    background: color-mix(in oklab, var(--accent) 6%, var(--paper));
+    border-top-color: var(--accent);
+  }
+
+  .arc-band[aria-current='true'],
+  .arc-band.is-now {
+    background: color-mix(in oklab, var(--accent) 8%, var(--paper));
+    border-top-color: var(--accent);
+  }
+
+  .arc-band[data-band='morning'] { --arc-v: var(--v-morning); }
+  .arc-band[data-band='midday']  { --arc-v: var(--v-focus); }
+  .arc-band[data-band='evening'] { --arc-v: var(--v-space); }
+  .arc-band[data-band='night']   { --arc-v: var(--v-slow); }
+
+  .arc-band:hover,
+  .arc-band[aria-current='true'],
+  .arc-band.is-now {
+    border-top-color: var(--arc-v);
+    background: color-mix(in oklab, var(--arc-v) 6%, var(--paper));
+  }
+
+  .arc-hours {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--ink-mute);
+  }
+
+  .arc-label {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: clamp(0.9375rem, 2.5vw, 1.125rem);
+    font-weight: 480;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+
+  .arc-band:hover .arc-label,
+  .arc-band[aria-current='true'] .arc-label,
+  .arc-band.is-now .arc-label {
+    color: var(--arc-v);
+  }
+
+  .arc-sub {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--ink-mute);
+    line-height: 1.4;
+  }
+
+  @media (max-width: 480px) {
+    .day-arc {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .arc-sub {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .arc-band { transition: none; }
+  }
+</style>

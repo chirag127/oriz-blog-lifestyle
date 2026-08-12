@@ -2,20 +2,21 @@
 /**
  * /  — "Slow Hours" home.
  *
- * Hero = thesis. The page opens with a quiet declaration of the day set in
- * Fraunces, a mono dateline showing the reader's local time, and the
- * SIGNATURE element: the Hour Ribbon — a 24-tick timeline of the day with the
- * current local hour lit in clay (dawn · midday · dusk · night). The ribbon
- * reframes the whole blog as notes kept through the hours of a day.
+ * STRUCTURE (unique to this niche):
+ *   1. HERO — thesis + live clock dateline + hour ribbon
+ *   2. DAY-ARC NAV — four bands (Mornings · Focus · Space · Slow) are the
+ *      primary navigation for this site; highlights the reader's current band.
+ *      Not a generic "Topics" list — it orients the reader in their own day.
+ *   3. FEATURED MOMENT — the newest post, displayed as a single large card
+ *      with the band accent, date, and full dek. Unlike sibling card-grids,
+ *      this is ONE story given full attention.
+ *   4. READING NOW — the next 6 posts as a quiet ruled list.
+ *   5. BY THEME — typographic inline row.
  *
- * Below the fold, two quiet strata:
- *   1. READING NOW — recent posts, each with its day-arc theme kicker
- *   2. BY THEME     — one typographic row (Mornings · Space · Focus · Slow)
- *
- * No cover images, no big-number hero, no gradient. Calm negative space and
- * one restrained load animation on the current-hour tick.
+ * No generic hero+card-grid. Every section is ordered by the day's rhythm.
  */
 import BaseLayout from '~/layouts/BaseLayout.astro'
+import DayArcNav from '~/components/DayArcNav.astro'
 import {
   getCategoriesWithCounts,
   getPublishedPosts,
@@ -24,16 +25,16 @@ import {
   slugifyTag,
   verticalFor,
   verticalLabel,
+  formatPostDate,
 } from '~/lib/blog'
 import { SITE_CONFIG } from '~/lib/config'
 
 const allPosts = await getPublishedPosts()
 const lead = allPosts[0]
-const recentPosts = allPosts.slice(0, 8)
+const recentPosts = allPosts.slice(1, 7)
 const cats = await getCategoriesWithCounts()
 
-// Server-rendered fallback hour; a tiny inline script re-lights it to the
-// reader's real local hour on load (progressive enhancement).
+// Server-rendered fallback hour; a tiny inline script re-lights it.
 const now = new Date()
 const serverHour = now.getHours()
 const dateline = now.toLocaleDateString('en-GB', {
@@ -62,7 +63,7 @@ const jsonLd = {
 
 <BaseLayout title="Slow Hours" description={SITE_CONFIG.description} jsonLd={jsonLd} wide>
   <div class="home">
-    {/* ── Hero: thesis + hour ribbon ─────────────────────────────────── */}
+    {/* ── Hero: thesis + clock + hour ribbon ───────────────────────── */}
     <section class="hero" aria-label="Slow Hours">
       <p class="dateline mono">
         <span class="clock" data-clock aria-hidden="true">{String(serverHour).padStart(2, '0')}:00</span>
@@ -97,11 +98,34 @@ const jsonLd = {
           <span>night</span>
         </figcaption>
       </figure>
+
+      {/* SIGNATURE NAVIGATION: day-arc four bands */}
+      <DayArcNav />
     </section>
 
     <hr class="hairline" />
 
-    {/* ── Stratum 1: reading now ─────────────────────────────────────── */}
+    {/* ── Featured moment: latest post, single full card ────────────── */}
+    {lead && (
+      <section class="stratum" aria-labelledby="s-moment">
+        <h2 id="s-moment" class="stratum-h mono">This moment</h2>
+        <a class="moment-card" href={`/blog/${lead.id}`} data-vertical={postVertical(lead)}>
+          <span class="moment-kicker mono">
+            <span class="moment-tick" aria-hidden="true"></span>
+            {verticalLabel(postVertical(lead))}
+            <span class="moment-sep" aria-hidden="true">·</span>
+            <time datetime={lead.data.pubDate.toISOString()}>{formatPostDate(lead.data.pubDate)}</time>
+          </span>
+          <h3 class="moment-title">{lead.data.title}</h3>
+          <p class="moment-dek">{lead.data.description}</p>
+          <span class="moment-cta mono">Read →</span>
+        </a>
+      </section>
+    )}
+
+    <hr class="hairline" />
+
+    {/* ── Stratum 2: reading now ─────────────────────────────────────── */}
     <section class="stratum" aria-labelledby="s-reading">
       <h2 id="s-reading" class="stratum-h mono">Reading now</h2>
       <ul class="reading-list">
@@ -252,7 +276,6 @@ const jsonLd = {
       opacity var(--dur-base) var(--ease-out);
     opacity: 0.55;
   }
-  /* daytime bands sit a touch taller so the day's shape reads even before JS */
   .tick[data-band='dawn'] { height: 16px; }
   .tick[data-band='midday'] { height: 26px; }
   .tick[data-band='dusk'] { height: 16px; }
@@ -302,6 +325,89 @@ const jsonLd = {
     color: var(--ink-mute);
     font-weight: 500;
     margin: 0 0 1.5rem;
+  }
+
+  /* ── Featured moment card ─────────────────────────────────────────── */
+
+  .moment-card {
+    display: grid;
+    gap: 0.625rem;
+    text-decoration: none;
+    color: var(--ink);
+    padding: clamp(1.25rem, 4vw, 2rem);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--accent);
+    background: color-mix(in oklab, var(--accent) 3%, var(--paper));
+    transition:
+      border-top-color var(--dur-fast) ease,
+      background var(--dur-fast) ease,
+      box-shadow var(--dur-fast) ease;
+    --v: var(--v-personal);
+  }
+  .moment-card[data-vertical='dev'] { --v: var(--v-dev); }
+  .moment-card[data-vertical='finance'] { --v: var(--v-finance); }
+  .moment-card[data-vertical='culture'] { --v: var(--v-culture); }
+  .moment-card[data-vertical='health'] { --v: var(--v-health); }
+  .moment-card:not([data-vertical]) { --v: var(--accent); }
+  .moment-card {
+    border-top-color: var(--v);
+    background: color-mix(in oklab, var(--v) 4%, var(--paper));
+  }
+  .moment-card:hover {
+    background: color-mix(in oklab, var(--v) 8%, var(--paper));
+    box-shadow: 0 2px 16px color-mix(in oklab, var(--v) 12%, transparent);
+  }
+
+  .moment-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--v);
+    font-weight: 600;
+  }
+  .moment-tick {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--v);
+    flex: 0 0 auto;
+  }
+  .moment-sep {
+    color: var(--rule-strong);
+    font-weight: 400;
+  }
+
+  .moment-title {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: clamp(1.5rem, 4vw, 2.25rem);
+    font-weight: 460;
+    letter-spacing: -0.018em;
+    line-height: 1.15;
+    margin: 0;
+    color: var(--ink);
+    max-width: 22ch;
+  }
+  .moment-card:hover .moment-title { color: var(--v); }
+
+  .moment-dek {
+    font-family: var(--font-body);
+    font-size: 1.0625rem;
+    color: var(--ink-mute);
+    line-height: 1.6;
+    margin: 0;
+    max-width: 54ch;
+  }
+
+  .moment-cta {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--v);
+    margin-top: 0.375rem;
   }
 
   /* ── Reading now ──────────────────────────────────────────────────── */

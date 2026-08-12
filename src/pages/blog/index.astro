@@ -22,7 +22,7 @@ const jsonLd = {
   '@type': 'Blog',
   name: `Blog — ${SITE_CONFIG.title}`,
   url: new URL('/blog/', SITE_CONFIG.url).toString(),
-  description: 'Writing on software, AI agents, finance tooling, and the tools I build at oriz.in.',
+  description: 'Notes on minimalism, daily routines, attention and simple living.',
   author: {
     '@type': 'Person',
     name: SITE_CONFIG.author.name,
@@ -33,15 +33,15 @@ const jsonLd = {
 
 <BaseLayout
   title="Blog"
-  description="Writing on software, AI agents, finance tooling, and the tools I build."
+  description="Notes on minimalism, daily routines, attention and simple living."
   jsonLd={jsonLd}
 >
   <div class="container-page section">
     <header class="blog-head">
-      <p class="blog-kicker mono">The desk</p>
-      <h1>Blog</h1>
+      <p class="blog-kicker mono">The notebook</p>
+      <h1>All posts</h1>
       <p class="blog-lede">
-        Writing on software, AI agents, finance tooling, and the tools I build.
+        Notes on minimalism, daily routines, attention and simple living — written through the hours of a day.
       </p>
     </header>
 
