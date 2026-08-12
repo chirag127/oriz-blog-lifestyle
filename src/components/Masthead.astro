@@ -1,0 +1,48 @@
+---
+/*
+ * Masthead — ultra-minimal centered column shell top.
+ *
+ * No bar, no border, no sticky nav. Just the small centered "Slow Hours"
+ * wordmark sitting in generous whitespace at the head of the single reading
+ * column. Navigation is NOT here — it lives as a quiet inline row in the
+ * footer. This is the structural signature of this site: the page opens the
+ * way a notebook opens, with only its name.
+ *
+ * ⌘K search still works everywhere (HeaderControls island below binds the
+ * shortcut); the visible affordance for it lives in the footer.
+ */
+import HeaderControls from '~/components/HeaderControls.tsx'
+import StatusBanner from '~/components/StatusBanner.astro'
+import Wordmark from '~/components/Wordmark.astro'
+---
+
+<StatusBanner />
+<header class="masthead" transition:persist="masthead">
+  <Wordmark size={22} href="/" />
+  <div class="masthead-controls">
+    <HeaderControls client:idle />
+  </div>
+</header>
+
+<style>
+  .masthead {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding-block: clamp(2.5rem, 8vw, 4.5rem) clamp(1.75rem, 5vw, 3rem);
+    text-align: center;
+  }
+  /* Controls (⌘K / rss / theme) stay whisper-quiet under the wordmark. */
+  .masthead-controls {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+    transition: opacity var(--dur-fast, 120ms) ease;
+  }
+  .masthead-controls:hover,
+  .masthead-controls:focus-within {
+    opacity: 1;
+  }
+</style>

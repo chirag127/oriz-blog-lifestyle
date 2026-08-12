@@ -8,7 +8,7 @@ export interface AccountPanelProps {
 }
 
 export function AccountPanel({
-  siteName = 'oriz / blog',
+  siteName = 'Slow Hours',
   signInRedirectUrl,
   signOutRedirectUrl = '/',
 }: AccountPanelProps) {

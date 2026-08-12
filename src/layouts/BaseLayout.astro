@@ -1,25 +1,24 @@
 ---
 /*
- * BaseLayout — single page shell for every oriz-blog route (v2).
+ * BaseLayout — single page shell for every Slow Hours route.
  *
- * Per-app divergent Header (sweep #5 revert). Footer + Sidebar wrapper +
- * BottomBar structure come from @chirag127/astro-chrome; sidebar slot and
- * bottombar actions are app-specific.
+ * ARCHETYPE: ultra-minimal centered column. No header bar, no sidebar, no
+ * mobile tab bar. Every route is a single narrow reading column: a small
+ * centered wordmark (Masthead) at the top, the page content, then the quiet
+ * inline nav row + pull-quote (Footer). Nothing is sticky; the page reads
+ * top to bottom like a notebook page. This is what makes the site structurally
+ * its own — deliberately NOT the top-nav card-grid sibling shell.
  */
 import '~/styles/global.css'
 import '~/styles/oriz-ui-overrides.css'
 import 'katex/dist/katex.min.css'
 import '~/styles/tokens.css'
 import { ClientRouter } from 'astro:transitions'
-import AppSidebarContent from '~/components/AppSidebarContent.astro'
-import BottomBar from '~/components/chrome/BottomBar.astro'
 import ConsentBanner from '~/components/chrome/ConsentBanner.astro'
 import FamilyChrome from '~/components/chrome/FamilyChrome.astro'
-import Sidebar from '~/components/chrome/Sidebar.astro'
 import FeedDiscovery from '~/components/FeedDiscovery.astro'
 import Footer from '~/components/Footer.astro'
-import Header from '~/components/Header.astro'
-import { bottomBarActions } from '~/data/bottombar-actions'
+import Masthead from '~/components/Masthead.astro'
 
 interface Props {
   title?: string
@@ -31,7 +30,8 @@ interface Props {
   type?: 'website' | 'article'
   pubDate?: Date
   updatedDate?: Date
-  hideSidebar?: boolean
+  /** Let a route own its full width (no centered column) — e.g. the hero home. */
+  wide?: boolean
 }
 
 const {
@@ -44,16 +44,13 @@ const {
   type = 'website',
   pubDate,
   updatedDate,
-  hideSidebar = false,
+  wide = false,
 } = Astro.props
 
 const adsenseClient = import.meta.env.PUBLIC_ADSENSE_CLIENT
 const beaconToken = import.meta.env.PUBLIC_CF_BEACON_TOKEN
 const ga4Id = import.meta.env.PUBLIC_GA4_ID
 const ogImage = image ? new URL(image, 'https://lifestyle-blog.oriz.in').toString() : undefined
-const visibleBottomBarActions = hideSidebar
-  ? bottomBarActions.filter((action) => action.label !== 'Menu')
-  : bottomBarActions
 ---
 
 <!doctype html>
@@ -141,13 +138,11 @@ const visibleBottomBarActions = hideSidebar
   <body>
     <FamilyChrome slug="oriz-pages-blog-app" title="Blog" accent="var(--accent)" />
     <a href="#main" class="skip-link">Skip to content</a>
-    <Header />
-    <div class="layout-body">
-      {!hideSidebar && <Sidebar><AppSidebarContent /></Sidebar>}
-      <main id="main"><slot /></main>
+    <div class="column">
+      <Masthead />
+      <main id="main" class:list={["reading", wide && "is-wide"]}><slot /></main>
     </div>
     <Footer />
-    <BottomBar actions={visibleBottomBarActions} />
     <ConsentBanner />
 
     <script>
@@ -161,9 +156,17 @@ const visibleBottomBarActions = hideSidebar
 </html>
 
 <style>
-  .layout-body { display: flex; gap: 0; align-items: flex-start; }
-  .layout-body > main { flex: 1 1 auto; min-width: 0; }
-  @media (max-width: 767px) {
-    .layout-body { display: block; }
+  /* One spine for the whole page: masthead, content, footer all share it. */
+  .column {
+    width: 100%;
+  }
+  .reading {
+    max-width: 640px;
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 5vw, 2rem);
+  }
+  /* The home hero opts into a slightly wider column for its ribbon. */
+  .reading.is-wide {
+    max-width: 720px;
   }
 </style>
