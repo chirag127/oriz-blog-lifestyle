@@ -1,0 +1,439 @@
+---
+/**
+ * /  — "Slow Hours" home.
+ *
+ * Hero = thesis. The page opens with a quiet declaration of the day set in
+ * Fraunces, a mono dateline showing the reader's local time, and the
+ * SIGNATURE element: the Hour Ribbon — a 24-tick timeline of the day with the
+ * current local hour lit in clay (dawn · midday · dusk · night). The ribbon
+ * reframes the whole blog as notes kept through the hours of a day.
+ *
+ * Below the fold, two quiet strata:
+ *   1. READING NOW — recent posts, each with its day-arc theme kicker
+ *   2. BY THEME     — one typographic row (Mornings · Space · Focus · Slow)
+ *
+ * No cover images, no big-number hero, no gradient. Calm negative space and
+ * one restrained load animation on the current-hour tick.
+ */
+import BaseLayout from '~/layouts/BaseLayout.astro'
+import {
+  getCategoriesWithCounts,
+  getPublishedPosts,
+  postVertical,
+  readingTimeFor,
+  slugifyTag,
+  verticalFor,
+  verticalLabel,
+} from '~/lib/blog'
+import { SITE_CONFIG } from '~/lib/config'
+
+const allPosts = await getPublishedPosts()
+const lead = allPosts[0]
+const recentPosts = allPosts.slice(0, 8)
+const cats = await getCategoriesWithCounts()
+
+// Server-rendered fallback hour; a tiny inline script re-lights it to the
+// reader's real local hour on load (progressive enhancement).
+const now = new Date()
+const serverHour = now.getHours()
+const dateline = now.toLocaleDateString('en-GB', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+})
+
+const HOURS = Array.from({ length: 24 }, (_, h) => h)
+function bandFor(h: number): 'dawn' | 'midday' | 'dusk' | 'night' {
+  if (h >= 5 && h < 11) return 'dawn'
+  if (h >= 11 && h < 17) return 'midday'
+  if (h >= 17 && h < 21) return 'dusk'
+  return 'night'
+}
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Blog',
+  name: SITE_CONFIG.title,
+  url: `${SITE_CONFIG.url}/`,
+  description: SITE_CONFIG.description,
+  author: { '@type': 'Person', name: SITE_CONFIG.author.name, url: SITE_CONFIG.author.url },
+}
+---
+
+<BaseLayout title="Slow Hours" description={SITE_CONFIG.description} jsonLd={jsonLd} hideSidebar>
+  <div class="home">
+    {/* ── Hero: thesis + hour ribbon ─────────────────────────────────── */}
+    <section class="hero" aria-label="Slow Hours">
+      <p class="dateline mono">
+        <span class="clock" data-clock aria-hidden="true">{String(serverHour).padStart(2, '0')}:00</span>
+        <span class="dateline-sep" aria-hidden="true">·</span>
+        <span>{dateline}</span>
+      </p>
+
+      <h1 class="thesis">
+        Fewer things.<br />More attention.
+      </h1>
+      <p class="thesis-sub">
+        A field notebook on minimalism, daily routines and simple living — small
+        experiments in spending your hours on purpose.
+      </p>
+
+      {/* SIGNATURE: the hour ribbon */}
+      <figure class="ribbon" role="img" aria-label={`A day, hour by hour. It is now hour ${serverHour}.`}>
+        <div class="ribbon-track" data-ribbon>
+          {HOURS.map((h) => (
+            <span
+              class="tick"
+              data-hour={h}
+              data-band={bandFor(h)}
+              aria-hidden="true"
+            ></span>
+          ))}
+        </div>
+        <figcaption class="ribbon-labels mono" aria-hidden="true">
+          <span>dawn</span>
+          <span>midday</span>
+          <span>dusk</span>
+          <span>night</span>
+        </figcaption>
+      </figure>
+    </section>
+
+    <hr class="hairline" />
+
+    {/* ── Stratum 1: reading now ─────────────────────────────────────── */}
+    <section class="stratum" aria-labelledby="s-reading">
+      <h2 id="s-reading" class="stratum-h mono">Reading now</h2>
+      <ul class="reading-list">
+        {recentPosts.map((p) => (
+          <li class="reading-row" data-vertical={postVertical(p)}>
+            <a class="reading-link" href={`/blog/${p.id}`}>
+              <span class="reading-kicker mono">
+                <span class="reading-tick" aria-hidden="true"></span>{verticalLabel(postVertical(p))}
+              </span>
+              <span class="reading-title">{p.data.title}</span>
+              <span class="reading-dek">{p.data.description}</span>
+              <span class="reading-meta mono">
+                <time datetime={p.data.pubDate.toISOString()}>
+                  {p.data.pubDate.toISOString().slice(0, 10)}
+                </time>
+                <span aria-hidden="true">·</span>
+                <span>{p.data.readingTime ?? readingTimeFor(p)}</span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <p class="all-link">
+        <a href="/archive/">the whole archive →</a>
+      </p>
+    </section>
+
+    {cats.length > 0 && (
+      <>
+        <hr class="hairline" />
+        <section class="stratum" aria-labelledby="s-themes">
+          <h2 id="s-themes" class="stratum-h mono">By theme</h2>
+          <p class="themes-row">
+            {cats.map((c, i) => (
+              <>
+                {i > 0 && <span class="themes-dot" aria-hidden="true">·</span>}
+                <a
+                  href={`/categories/${slugifyTag(c.category)}/`}
+                  class="themes-link"
+                  data-vertical={verticalFor(c.category)}
+                >
+                  <span class="themes-name">{c.category}</span>
+                  <span class="themes-count mono">({c.count})</span>
+                </a>
+              </>
+            ))}
+          </p>
+        </section>
+      </>
+    )}
+  </div>
+</BaseLayout>
+
+<script is:inline>
+  // Light the reader's real local hour on the ribbon + update the clock.
+  ;(() => {
+    const now = new Date()
+    const h = now.getHours()
+    const track = document.querySelector('[data-ribbon]')
+    if (track) {
+      for (const el of track.querySelectorAll('.tick')) {
+        const hour = Number(el.getAttribute('data-hour'))
+        el.classList.toggle('is-now', hour === h)
+        el.classList.toggle('is-past', hour < h)
+      }
+    }
+    const clock = document.querySelector('[data-clock]')
+    if (clock) {
+      const set = () => {
+        const d = new Date()
+        clock.textContent =
+          String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0')
+      }
+      set()
+      setInterval(set, 30_000)
+    }
+  })()
+</script>
+
+<style>
+  .home {
+    max-width: 860px;
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 5vw, 2rem);
+  }
+
+  /* ── Hero ─────────────────────────────────────────────────────────── */
+
+  .hero {
+    padding-block: clamp(3rem, 10vw, 6rem) clamp(2rem, 6vw, 3.5rem);
+  }
+  .dateline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin: 0 0 clamp(1.5rem, 4vw, 2.25rem);
+  }
+  .dateline .clock {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .dateline-sep {
+    color: var(--rule-strong);
+  }
+
+  .thesis {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-weight: 460;
+    font-size: clamp(2.75rem, 9vw, 5.25rem);
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0;
+    max-width: 15ch;
+  }
+  .thesis-sub {
+    font-family: var(--font-body);
+    font-size: clamp(1.0625rem, 2vw, 1.25rem);
+    line-height: 1.6;
+    color: var(--ink-mute);
+    margin: 1.5rem 0 0;
+    max-width: 46ch;
+  }
+
+  /* ── Signature: hour ribbon ───────────────────────────────────────── */
+
+  .ribbon {
+    margin: clamp(2.5rem, 7vw, 4rem) 0 0;
+  }
+  .ribbon-track {
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+    align-items: end;
+    gap: clamp(3px, 1.2vw, 9px);
+    height: 34px;
+  }
+  .tick {
+    height: 10px;
+    align-self: end;
+    background: var(--rule-strong);
+    border-radius: 999px;
+    transition:
+      height var(--dur-base) var(--ease-out),
+      background-color var(--dur-base) var(--ease-out),
+      opacity var(--dur-base) var(--ease-out);
+    opacity: 0.55;
+  }
+  /* daytime bands sit a touch taller so the day's shape reads even before JS */
+  .tick[data-band='dawn'] { height: 16px; }
+  .tick[data-band='midday'] { height: 26px; }
+  .tick[data-band='dusk'] { height: 16px; }
+  .tick[data-band='night'] { height: 10px; }
+
+  .tick.is-past {
+    opacity: 0.85;
+    background: color-mix(in oklab, var(--ink-mute) 55%, var(--rule-strong));
+  }
+  .tick.is-now {
+    height: 34px;
+    opacity: 1;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 20%, transparent);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .tick.is-now {
+      animation: hour-breathe 3.2s var(--ease-in-out) 1;
+    }
+  }
+  @keyframes hour-breathe {
+    0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 45%, transparent); }
+    60% { box-shadow: 0 0 0 8px color-mix(in oklab, var(--accent) 0%, transparent); }
+    100% { box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 20%, transparent); }
+  }
+
+  .ribbon-labels {
+    display: flex;
+    justify-content: space-between;
+    margin: 0.875rem 0 0;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+
+  /* ── Strata ───────────────────────────────────────────────────────── */
+
+  .stratum {
+    padding-block: clamp(2rem, 5vw, 2.75rem);
+  }
+  .stratum-h {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--ink-mute);
+    font-weight: 500;
+    margin: 0 0 1.5rem;
+  }
+
+  /* ── Reading now ──────────────────────────────────────────────────── */
+
+  .reading-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .reading-row {
+    --v: var(--v-personal);
+    border-bottom: 1px solid color-mix(in oklab, var(--rule) 80%, transparent);
+  }
+  .reading-row[data-vertical='dev'] { --v: var(--v-dev); }
+  .reading-row[data-vertical='finance'] { --v: var(--v-finance); }
+  .reading-row[data-vertical='culture'] { --v: var(--v-culture); }
+  .reading-row[data-vertical='health'] { --v: var(--v-health); }
+  .reading-row:last-child { border-bottom: 0; }
+
+  .reading-link {
+    display: grid;
+    gap: 0.375rem;
+    color: var(--ink);
+    text-decoration: none;
+    padding: 1.25rem 0.875rem;
+    margin-inline: -0.875rem;
+    border-left: 2px solid transparent;
+    border-radius: var(--radius-card);
+    transition:
+      border-color var(--dur-fast) ease,
+      background-color var(--dur-fast) ease;
+  }
+  .reading-link:hover {
+    border-left-color: var(--v);
+    background: color-mix(in oklab, var(--v) 6%, transparent);
+  }
+  .reading-link:hover .reading-title { color: var(--accent); }
+
+  .reading-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--v);
+    font-weight: 600;
+  }
+  .reading-tick {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--v);
+    flex: 0 0 auto;
+  }
+  .reading-title {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: clamp(1.35rem, 3vw, 1.75rem);
+    font-weight: 480;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+  .reading-dek {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    color: var(--ink-mute);
+    line-height: 1.55;
+    max-width: 62ch;
+  }
+  .reading-meta {
+    display: inline-flex;
+    gap: 0.5rem;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--ink-mute);
+    margin-top: 0.125rem;
+  }
+
+  .all-link {
+    margin: 1.5rem 0 0;
+    font-family: var(--font-body);
+    font-size: 0.9375rem;
+  }
+  .all-link a {
+    color: var(--ink-mute);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-color: var(--rule-strong);
+  }
+  .all-link a:hover {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
+  }
+
+  /* ── By theme ─────────────────────────────────────────────────────── */
+
+  .themes-row {
+    margin: 0;
+    line-height: 2.2;
+    color: var(--ink);
+  }
+  .themes-link {
+    --v: var(--v-personal);
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .themes-link[data-vertical='dev'] { --v: var(--v-dev); }
+  .themes-link[data-vertical='finance'] { --v: var(--v-finance); }
+  .themes-link[data-vertical='culture'] { --v: var(--v-culture); }
+  .themes-link[data-vertical='health'] { --v: var(--v-health); }
+  .themes-link:hover .themes-name { color: var(--v); }
+  .themes-name {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-size: 1.25rem;
+    font-weight: 460;
+    letter-spacing: -0.01em;
+  }
+  .themes-count {
+    color: var(--ink-mute);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    margin-left: 0.25rem;
+  }
+  .themes-dot {
+    color: var(--rule-strong);
+    margin-inline: 0.75rem;
+  }
+</style>

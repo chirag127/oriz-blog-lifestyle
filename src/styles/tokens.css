@@ -1,0 +1,248 @@
+/*
+ * tokens.css — "Slow Hours" identity for lifestyle-blog.oriz.in.
+ *
+ * A lifestyle notebook about minimalism, routines and simple living. The look
+ * is built around a DAY and its rhythm, not the AI cream+serif+terracotta
+ * cliché: paper is a cool warm-white (green-leaning, NOT beige), the neutral
+ * ramp is stone-gray (cool), and the single accent is a muted BURNT CLAY —
+ * deliberately darkened + desaturated so it never reads as bright terracotta.
+ *
+ *   Cool warm-white paper · stone-gray ink · burnt-clay accent
+ *   Display = Fraunces (soft old-style serif) · body = Instrument Sans ·
+ *   utility/time = JetBrains Mono.
+ *
+ * Signature element: the "hour ribbon" — a 24-tick day timeline with the
+ * current local hour lit in clay (see index.astro + Header).
+ *
+ * Light is the primary, intended mode (calm daylight). Every --color-* alias
+ * is preserved so chrome/legal/Footer components compile unchanged. Modes:
+ *   :root                              → light (default, canonical)
+ *   [data-theme="dark"]                → dusk (warm dark, always overrides)
+ *   @media (prefers-color-scheme:dark) → dusk, UNLESS [data-theme="light"]
+ *   [data-theme="sepia"]               → lamplight (warmer paper)
+ *   [data-theme="hc"]                  → pure black/white high contrast
+ */
+:root {
+  color-scheme: light;
+
+  /* ── daylight palette (primary) ───────────────────────────────────────
+     Cool warm-white paper, stone-gray ink, one burnt-clay accent. */
+  --brand: #b4552f; /* burnt clay — links, active, primary (muted, not bright) */
+  --brand-soft: #efe6df; /* soft clay tint — hover, chips */
+  --success: #5f7a5a; /* muted sage */
+  --danger-color: #a6432e;
+
+  --paper: #f7f6f2; /* cool warm-white page bg (green-leaning, not beige) */
+  --paper-2: #edece5; /* raised surface / panel */
+  --surface: var(--paper-2);
+  --ink: #23231f; /* warm near-black text */
+  --ink-mute: #6e6c63; /* stone-gray secondary */
+  --rule: #dedcd3; /* soft hairlines */
+  --rule-strong: #c9c6bb; /* heavier rule */
+
+  /* canonical accent — everything routes through --accent. */
+  --accent: var(--brand);
+  --accent-soft: var(--brand-soft);
+  --cobalt: var(--accent); /* back-compat alias */
+  --brand-tint: var(--brand-soft);
+  --sage: var(--success);
+  --vermilion: var(--danger-color);
+  --highlighter: var(--brand);
+
+  /* content-theme marker colours — quiet, day-arc hues. Thin rules /
+     kicker dots only, never the page accent. Mornings · Space · Focus · Slow. */
+  --v-morning: #c9843e; /* dawn amber */
+  --v-space: #5f7a5a; /* sage */
+  --v-focus: #4a6d82; /* slate blue */
+  --v-slow: #9a6a86; /* dusk mauve */
+  --v-personal: #6e6c63; /* stone */
+
+  /* aliases mapping the base component's vertical names onto ours */
+  --v-dev: var(--v-focus);
+  --v-finance: var(--v-space);
+  --v-culture: var(--v-slow);
+  --v-health: var(--v-morning);
+
+  /* semantic passthroughs */
+  --color-bg: var(--paper);
+  --color-fg: var(--ink);
+  --color-accent: var(--brand);
+  --color-accent-fg: #f7f6f2;
+  --color-sage: var(--success);
+  --color-muted: var(--ink-mute);
+  --color-border: var(--rule);
+  --color-bg-soft: var(--paper-2);
+  --color-bg-muted: var(--paper-2);
+  --color-prose: var(--ink);
+  --color-fg-muted: var(--ink-mute);
+  --color-fg-soft: var(--ink-mute);
+
+  /* color alias layer (chrome components read these) */
+  --color-brand-indigo: var(--brand);
+  --color-brand-indigo-soft: var(--brand-soft);
+  --color-brand-success: var(--success);
+  --color-brand-danger: var(--danger-color);
+  --color-neutral-0: #f7f6f2;
+  --color-neutral-50: #edece5;
+  --color-neutral-100: #e4e2d9;
+  --color-neutral-200: #dedcd3;
+  --color-neutral-300: #c9c6bb;
+  --color-neutral-500: #6e6c63;
+  --color-neutral-700: #45443d;
+  --color-neutral-900: #23231f;
+  --color-neutral-1000: #000000;
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-ink: var(--ink);
+  --color-ink-mute: var(--ink-mute);
+  --color-rule: var(--rule);
+
+  /* ── type ───────────────────────────────────────────────────────────
+     Families declared ONCE in global.css @theme. Sizes only here. */
+
+  --text-2xs: 10px;
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-md: 17px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+  --text-3xl: 48px;
+
+  /* spacing — generous, for calm negative space */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* motion — restrained */
+  --dur-fast: 140ms;
+  --dur-base: 240ms;
+  --dur-slow: 480ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* breakpoints */
+  --bp-sm: 480px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1440px;
+
+  /* radii + containers — soft, not zero (calm, not brutalist) */
+  --radius-card: 10px;
+  --radius-button: 8px;
+  --container-page: 1080px;
+}
+
+/* ── DUSK — system dark preference, unless user forced light ───────────
+   A warm, low-lit evening — not pure black. Keeps the clay glowing. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --brand: #d97a4e;
+    --brand-soft: #2e211a;
+    --success: #8fae86;
+    --danger-color: #e0745c;
+    --paper: #1a1815;
+    --paper-2: #221f1b;
+    --ink: #ece7dd;
+    --ink-mute: #a29b8c;
+    --rule: #322e28;
+    --rule-strong: #453f37;
+    --v-morning: #e0a25c;
+    --v-space: #8fae86;
+    --v-focus: #7ba3bd;
+    --v-slow: #c396ac;
+    --v-personal: #a29b8c;
+    --color-accent-fg: #1a1815;
+    --color-neutral-0: #1a1815;
+    --color-neutral-50: #221f1b;
+    --color-neutral-100: #2a2621;
+    --color-neutral-200: #322e28;
+    --color-neutral-300: #453f37;
+    --color-neutral-500: #a29b8c;
+    --color-neutral-700: #cfc8bb;
+    --color-neutral-900: #ece7dd;
+  }
+}
+
+/* ── DUSK — explicit user override, wins over system ───────────────────── */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --brand: #d97a4e;
+  --brand-soft: #2e211a;
+  --success: #8fae86;
+  --danger-color: #e0745c;
+  --paper: #1a1815;
+  --paper-2: #221f1b;
+  --ink: #ece7dd;
+  --ink-mute: #a29b8c;
+  --rule: #322e28;
+  --rule-strong: #453f37;
+  --v-morning: #e0a25c;
+  --v-space: #8fae86;
+  --v-focus: #7ba3bd;
+  --v-slow: #c396ac;
+  --v-personal: #a29b8c;
+  --color-accent-fg: #1a1815;
+  --color-neutral-0: #1a1815;
+  --color-neutral-50: #221f1b;
+  --color-neutral-100: #2a2621;
+  --color-neutral-200: #322e28;
+  --color-neutral-300: #453f37;
+  --color-neutral-500: #a29b8c;
+  --color-neutral-700: #cfc8bb;
+  --color-neutral-900: #ece7dd;
+}
+
+/* ── LAMPLIGHT — warmer paper, softer contrast ─────────────────────────── */
+:root[data-theme='sepia'] {
+  color-scheme: light;
+  --brand: #a34a29;
+  --brand-soft: #f0e4da;
+  --paper: #f3ece0;
+  --paper-2: #ebe2d2;
+  --ink: #2c281f;
+  --ink-mute: #726851;
+  --rule: #ddd1bc;
+  --rule-strong: #cdbfa4;
+  --color-accent-fg: #f3ece0;
+  --color-fg-soft: color-mix(in oklab, var(--ink) 55%, var(--paper));
+  --color-neutral-0: #f3ece0;
+  --color-neutral-50: #ebe2d2;
+  --color-neutral-100: #e3d8c3;
+  --color-neutral-200: #ddd1bc;
+  --color-neutral-300: #cdbfa4;
+  --color-neutral-500: #726851;
+  --color-neutral-700: #4a4234;
+  --color-neutral-900: #2c281f;
+}
+
+/* ── HIGH-CONTRAST — pure black/white, hard rules ──────────────────────── */
+:root[data-theme='hc'] {
+  color-scheme: light;
+  --brand: #8f3312;
+  --brand-soft: #f3e2da;
+  --paper: #ffffff;
+  --paper-2: #ffffff;
+  --ink: #000000;
+  --ink-mute: #262620;
+  --rule: #000000;
+  --rule-strong: #000000;
+  --color-accent-fg: #ffffff;
+  --color-fg-soft: #262620;
+  --color-neutral-0: #ffffff;
+  --color-neutral-50: #ffffff;
+  --color-neutral-100: #ffffff;
+  --color-neutral-200: #000000;
+  --color-neutral-300: #000000;
+  --color-neutral-500: #262620;
+  --color-neutral-700: #000000;
+  --color-neutral-900: #000000;
+}

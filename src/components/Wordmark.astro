@@ -1,0 +1,89 @@
+---
+/*
+ * Wordmark — "Slow Hours" masthead mark.
+ *
+ * Set in Fraunces (the display serif). The signature detail is a small clay
+ * dot tucked between the two words — a single lit hour on the day's ribbon,
+ * scaled down to a punctuation mark. Distinct to this site; not the sister
+ * blog's proofreader z-strike.
+ */
+
+interface Props {
+  /** Sub-section name — rendered after the mark. Kept for API parity. */
+  subtitle?: string
+  /** Display size in CSS pixels. */
+  size?: number
+  /** Wrap the mark in an <a href="/">. */
+  href?: string | null
+  /** Render as <h1> (the masthead) rather than <div>. */
+  asHeading?: boolean
+}
+
+const { subtitle, size = 96, href = null, asHeading = false } = Astro.props
+const Tag = asHeading ? 'h1' : ('div' as const)
+---
+
+{
+  href ? (
+    <a
+      class="wordmark-link"
+      href={href}
+      aria-label={subtitle ? `Slow Hours — ${subtitle}` : 'Slow Hours'}
+    >
+      <Tag class="wordmark" style={`--wm-size: ${size}px;`}>
+        <span class="wordmark-word">Slow</span>
+        <span class="wordmark-dot" aria-hidden="true" />
+        <span class="wordmark-word">Hours</span>
+        {subtitle && <span class="wordmark-sub">{subtitle}</span>}
+      </Tag>
+    </a>
+  ) : (
+    <Tag class="wordmark" style={`--wm-size: ${size}px;`}>
+      <span class="wordmark-word">Slow</span>
+      <span class="wordmark-dot" aria-hidden="true" />
+      <span class="wordmark-word">Hours</span>
+      {subtitle && <span class="wordmark-sub">{subtitle}</span>}
+    </Tag>
+  )
+}
+
+<style>
+  .wordmark-link {
+    display: inline-block;
+    color: inherit;
+    text-decoration: none;
+  }
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.32em;
+    margin: 0;
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-weight: 480;
+    font-size: var(--wm-size, 96px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .wordmark-word {
+    display: inline-block;
+  }
+  .wordmark-dot {
+    width: 0.24em;
+    height: 0.24em;
+    border-radius: 999px;
+    background: var(--accent);
+    flex: 0 0 auto;
+    box-shadow: 0 0 0 0.06em color-mix(in oklab, var(--accent) 22%, transparent);
+  }
+  .wordmark-sub {
+    margin-left: 0.15em;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: 0.5em;
+    letter-spacing: 0.04em;
+    align-self: center;
+  }
+</style>
